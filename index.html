@@ -308,7 +308,83 @@
   ::placeholder {
     color: #B6B0A2;
   }
+
+  /* Upload de documentos */
+  .upload-box {
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 0.9rem 1rem;
+    margin-top: 0.6rem;
+    background: var(--paper);
+  }
+
+  .upload-box .upload-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .upload-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .upload-row input[type="file"] {
+    font-size: 13px;
+  }
+
+  .file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.6rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .file-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 13px;
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .file-list .file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-list .file-remove {
+    border: none;
+    background: none;
+    color: var(--warn-text);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 0.2rem;
+  }
+
+  .upload-status {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 0.4rem;
+    min-height: 1.2em;
+  }
+
+  .upload-status.error { color: var(--warn-text); }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -355,6 +431,15 @@
     </div>
     <div class="section-body">
       <textarea id="pedidosIniciais" rows="4" placeholder="Descreva, de forma objetiva, todos os pedidos formulados pelo consumidor na reclamação inicial (ex: restituição de valores, troca de produto, cancelamento de contrato, indenização, etc.)"></textarea>
+      <div class="upload-box">
+        <label class="upload-label" for="anexoInicial">Anexar documentos da inicial (PDF, imagem ou texto)</label>
+        <div class="upload-row">
+          <input type="file" id="anexoInicial" accept=".pdf,.png,.jpg,.jpeg,.txt" multiple>
+          <button class="btn secondary" id="btnExtrairInicial" type="button">Extrair texto e preencher</button>
+        </div>
+        <ul class="file-list" id="listaAnexoInicial"></ul>
+        <p class="upload-status" id="statusAnexoInicial"></p>
+      </div>
     </div>
   </div>
 
@@ -366,6 +451,15 @@
     </div>
     <div class="section-body">
       <textarea id="respostaFornecedora" rows="6" placeholder="Cole ou transcreva integralmente (ou em resumo fiel) a resposta/defesa apresentada pela empresa reclamada, incluindo documentos juntados, propostas de acordo, alegações preliminares e mérito."></textarea>
+      <div class="upload-box">
+        <label class="upload-label" for="anexoResposta">Anexar documentos da resposta da fornecedora (PDF, imagem ou texto)</label>
+        <div class="upload-row">
+          <input type="file" id="anexoResposta" accept=".pdf,.png,.jpg,.jpeg,.txt" multiple>
+          <button class="btn secondary" id="btnExtrairResposta" type="button">Extrair texto e preencher</button>
+        </div>
+        <ul class="file-list" id="listaAnexoResposta"></ul>
+        <p class="upload-status" id="statusAnexoResposta"></p>
+      </div>
     </div>
   </div>
 
@@ -545,9 +639,11 @@ document.getElementById('btnAnalise').addEventListener('click', async () => {
   setLoading(btn, status, true, 'Gerar análise com IA', 'Analisando...');
 
   const prompt = "Você é assistente de um atendente do Procon (órgão brasileiro de defesa do consumidor). "
-    + "Com base nos dados abaixo, faça uma análise comparativa objetiva, em texto corrido, em português do Brasil, "
-    + "apontando: (a) quais pedidos da inicial foram atendidos pela fornecedora, (b) quais não foram atendidos, "
-    + "(c) contradições ou pontos obscuros na resposta, e (d) documentos ou esclarecimentos ainda pendentes. "
+    + "Com base nos dados abaixo, faça uma análise comparativa em texto corrido, em português do Brasil, "
+    + "em parágrafos concatenados, sem usar marcadores, números, letras ou divisões de tópicos. "
+    + "A análise deve abordar de forma fluida: quais pedidos da inicial foram atendidos pela fornecedora, quais não foram, "
+    + "eventuais contradições ou pontos obscuros na resposta, e quais documentos ou esclarecimentos ainda estão pendentes, "
+    + "sempre com foco na resolução do problema do consumidor. "
     + "Não invente fatos; baseie-se apenas no que foi informado.\n\n"
     + "PROCESSO N.: " + (val('numProc') || '[não informado]') + "\n"
     + "CONSUMIDORA(O): " + (val('consumidora') || '[não informado]') + "\n"
@@ -585,18 +681,18 @@ document.getElementById('btnMinuta').addEventListener('click', async () => {
   );
   if (checked('chkOutra')) providencias.push("Outra providência: " + (val('outraDetalhe') || "(detalhar)"));
 
-  const prompt = "Você é assistente jurídico de um atendente do Procon. Redija, em português do Brasil, formal e em texto contínuo "
-    + "(sem usar marcadores ou listas, em parágrafos corridos), uma minuta de despacho/encaminhamento processual para continuidade "
-    + "do processo administrativo de defesa do consumidor.\n\n"
+  const prompt = "Você é assistente jurídico de um atendente do Procon. Redija, em português do Brasil, formal, "
+    + "uma minuta de despacho/encaminhamento processual para continuidade do processo administrativo de defesa do consumidor.\n\n"
+    + "REQUISITOS DE FORMA, OBRIGATÓRIOS: o texto deve ser corrido, em parágrafos concatenados, conectados por conectivos "
+    + "e transições naturais. NÃO use divisão por tópicos, números, marcadores, títulos de seção ou qualquer estrutura "
+    + "que separe visualmente as partes do raciocínio. NÃO repita ou liste cada item separadamente; em vez disso, sintetize "
+    + "os pontos principais de cada informação (pedidos, resposta da fornecedora, despacho saneador, providências) de forma "
+    + "fluida dentro da narrativa. O texto deve ter foco na resolução do problema do consumidor, conduzindo o raciocínio "
+    + "naturalmente até as providências determinadas para a continuidade do feito.\n\n"
     + "DADOS DO PROCESSO:\n"
     + "Processo n.: " + (val('numProc') || '[número não informado]') + "\n"
     + "Consumidora(o): " + (val('consumidora') || '[não informado]') + "\n"
     + "Fornecedora: " + (val('fornecedora') || '[não informado]') + "\n\n"
-    + "Estruture o texto contemplando: 1) breve relato dos pedidos formulados na inicial pela consumidora identificada; "
-    + "2) análise da resposta apresentada pela fornecedora frente aos pedidos; "
-    + "3) síntese do despacho saneador anterior e seu confronto com a resposta da fornecedora; "
-    + "4) as providências determinadas para a continuidade do feito. "
-    + "Use linguagem técnica, mas clara, adequada para constar nos autos.\n\n"
     + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
     + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
     + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)') + "\n\n"
@@ -635,8 +731,158 @@ document.getElementById('btnLimpar').addEventListener('click', () => {
     el.closest('.provid-card').classList.remove('active');
   });
   document.getElementById('audienciaModo').value = 'presencial';
-  document.querySelectorAll('.status-msg').forEach(el => { el.textContent = ''; el.classList.remove('error'); });
+  document.querySelectorAll('.status-msg, .upload-status').forEach(el => { el.textContent = ''; el.classList.remove('error'); });
+  anexos.inicial = [];
+  anexos.resposta = [];
+  document.getElementById('listaAnexoInicial').innerHTML = '';
+  document.getElementById('listaAnexoResposta').innerHTML = '';
 });
+
+// --- Anexos de documentos (extração de texto) ---
+
+// Configura o worker do PDF.js
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+const anexos = {
+  inicial: [],
+  resposta: []
+};
+
+function setupUpload(inputId, listId, btnId, statusId, targetTextareaId, grupo, contextoPrompt) {
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  const btn = document.getElementById(btnId);
+  const status = document.getElementById(statusId);
+
+  input.addEventListener('change', () => {
+    for (const file of input.files) {
+      anexos[grupo].push(file);
+    }
+    input.value = '';
+    renderFileList();
+  });
+
+  function renderFileList() {
+    list.innerHTML = '';
+    anexos[grupo].forEach((file, idx) => {
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.className = 'file-name';
+      span.textContent = file.name;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'file-remove';
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remover';
+      removeBtn.addEventListener('click', () => {
+        anexos[grupo].splice(idx, 1);
+        renderFileList();
+      });
+      li.appendChild(span);
+      li.appendChild(removeBtn);
+      list.appendChild(li);
+    });
+  }
+
+  async function extractPdfText(file) {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let texto = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      texto += pageText + '\n';
+    }
+    return texto.trim();
+  }
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function extractImageText(file) {
+    const base64 = await readFileAsBase64(file);
+    const resp = await fetch('/api/gerar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: 'Transcreva fielmente todo o texto visível neste documento/imagem, sem comentários adicionais, sem resumir.',
+        image: { data: base64, media_type: file.type || 'image/jpeg' }
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Erro ao processar imagem');
+    return data.texto;
+  }
+
+  btn.addEventListener('click', async () => {
+    if (anexos[grupo].length === 0) {
+      status.textContent = 'Nenhum arquivo anexado.';
+      status.classList.add('error');
+      return;
+    }
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Extraindo...';
+    status.textContent = '';
+    status.classList.remove('error');
+
+    let textos = [];
+    for (const file of anexos[grupo]) {
+      try {
+        let texto = '';
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+          texto = await extractPdfText(file);
+          if (!texto) {
+            status.textContent = 'Aviso: "' + file.name + '" parece ser um PDF digitalizado (sem texto). Tente anexar como imagem (PNG/JPG) para usar OCR.';
+          }
+        } else if (file.type.startsWith('image/')) {
+          texto = await extractImageText(file);
+        } else {
+          texto = await readFileAsText(file);
+        }
+        if (texto) {
+          textos.push('--- Documento: ' + file.name + ' ---\n' + texto);
+        }
+      } catch (e) {
+        status.textContent = 'Erro ao processar "' + file.name + '": ' + e.message;
+        status.classList.add('error');
+      }
+    }
+
+    if (textos.length) {
+      const textarea = document.getElementById(targetTextareaId);
+      const novoConteudo = textarea.value.trim();
+      const textoExtraido = textos.join('\n\n');
+      textarea.value = (novoConteudo ? novoConteudo + '\n\n' : '') + textoExtraido;
+      if (!status.classList.contains('error')) {
+        status.textContent = 'Texto extraído e adicionado ao campo acima. Revise antes de continuar.';
+      }
+    }
+
+    btn.disabled = false;
+    btn.textContent = original;
+  });
+}
+
+setupUpload('anexoInicial', 'listaAnexoInicial', 'btnExtrairInicial', 'statusAnexoInicial', 'pedidosIniciais', 'inicial');
+setupUpload('anexoResposta', 'listaAnexoResposta', 'btnExtrairResposta', 'statusAnexoResposta', 'respostaFornecedora', 'resposta');
 </script>
 </body>
 </html>
