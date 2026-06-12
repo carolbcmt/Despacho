@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atendimento Procon - Continuidade Processual</title>
+<style>
+  :root {
+    --bg: #F6F4EF;
+    --paper: #FFFFFF;
+    --ink: #1F2421;
+    --ink-soft: #5C645E;
+    --line: #D9D4C8;
+    --accent: #1F6F50;
+    --accent-soft: #E4EFE8;
+    --accent-deep: #134A35;
+    --warn-bg: #FBEAE3;
+    --warn-text: #7A2E14;
+    --serif: "Source Serif Pro", Georgia, "Times New Roman", serif;
+    --sans: "Inter", "Segoe UI", Arial, sans-serif;
+    --mono: "JetBrains Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    padding: 0 1rem 4rem;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  header.page-head {
+    padding: 2.5rem 0 1.5rem;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    margin: 0 0 0.4rem;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 540px;
+  }
+
+  /* Header do processo */
+  .processo-head {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .processo-head .label-top {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 0.75rem;
+  }
+
+  .processo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .processo-grid .full { grid-column: 1 / -1; }
+
+  @media (max-width: 540px) {
+    .processo-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Seções numeradas */
+  .section {
+    margin: 1.75rem 0;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .section-num {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 2ch;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .section-hint {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 0.75rem;
+    padding-left: calc(2ch + 0.75rem);
+  }
+
+  .section-body {
+    padding-left: calc(2ch + 0.75rem);
+  }
+
+  @media (max-width: 480px) {
+    .section-hint, .section-body { padding-left: 0; }
+  }
+
+  /* Form elements */
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.3rem;
+  }
+
+  input[type="text"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.55rem 0.7rem;
+    margin-bottom: 0;
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: 1.6;
+    font-family: var(--sans);
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .field { margin-bottom: 1rem; }
+
+  /* Cards de providência */
+  .provid-card {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    background: var(--paper);
+    transition: border-color 0.15s ease;
+  }
+
+  .provid-card.active {
+    border-color: var(--accent);
+  }
+
+  .provid-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+
+  .provid-check input {
+    width: auto;
+    margin-top: 0.2rem;
+    accent-color: var(--accent);
+  }
+
+  .provid-card textarea, .provid-card .audiencia-grid {
+    margin-top: 0.7rem;
+  }
+
+  .audiencia-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+  }
+
+  @media (max-width: 540px) {
+    .audiencia-grid { grid-template-columns: 1fr; }
+  }
+
+  .audiencia-grid label { font-size: 11px; }
+
+  /* IA panels */
+  .ia-panel {
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 1.1rem 1.25rem;
+    background: var(--accent-soft);
+  }
+
+  .ia-panel .section-hint { padding-left: 0; color: var(--accent-deep); opacity: 0.85; }
+
+  textarea.ia-output {
+    background: var(--paper);
+  }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0.55rem 1.1rem;
+    border-radius: 4px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.05s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn:hover { opacity: 0.9; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: wait; }
+
+  .btn.secondary {
+    background: transparent;
+    color: var(--accent-deep);
+    border-color: var(--accent);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .status-msg {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 0.5rem;
+    min-height: 1.2em;
+  }
+
+  .status-msg.error { color: var(--warn-text); }
+
+  /* Final actions */
+  .final-actions {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Config notice */
+  .config-notice {
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    border-radius: 4px;
+    padding: 0.7rem 1rem;
+    font-size: 13px;
+    margin-top: 1.5rem;
+    display: none;
+  }
+
+  .config-notice.show { display: block; }
+
+  ::placeholder {
+    color: #B6B0A2;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <p class="eyebrow">Procon · Defesa do consumidor</p>
+    <h1>Atendimento &amp; continuidade processual</h1>
+    <p class="subtitle">Formulário para análise de pedidos da inicial, resposta da fornecedora e providências determinadas no despacho saneador.</p>
+  </header>
+
+  <div id="configNotice" class="config-notice"></div>
+
+  <div class="processo-head">
+    <p class="label-top">Cabeçalho do processo</p>
+    <div class="processo-grid">
+      <div class="full field" style="margin-bottom:0;">
+        <label for="numProc">Processo n.</label>
+        <input type="text" id="numProc" placeholder="Ex: 2026.001234-5">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="consumidora">Consumidora(o)</label>
+        <input type="text" id="consumidora" placeholder="Conforme documentação juntada">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="fornecedora">Fornecedora</label>
+        <input type="text" id="fornecedora" placeholder="Conforme documentação juntada">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="dataAt">Data do atendimento</label>
+        <input type="date" id="dataAt">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="atendente">Atendente responsável</label>
+        <input type="text" id="atendente" placeholder="Nome do atendente">
+      </div>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">1</span>
+      <h2 class="section-title">Pedidos formulados na petição inicial</h2>
+    </div>
+    <div class="section-body">
+      <textarea id="pedidosIniciais" rows="4" placeholder="Descreva, de forma objetiva, todos os pedidos formulados pelo consumidor na reclamação inicial (ex: restituição de valores, troca de produto, cancelamento de contrato, indenização, etc.)"></textarea>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">2</span>
+      <h2 class="section-title">Resposta apresentada pela fornecedora</h2>
+    </div>
+    <div class="section-body">
+      <textarea id="respostaFornecedora" rows="6" placeholder="Cole ou transcreva integralmente (ou em resumo fiel) a resposta/defesa apresentada pela empresa reclamada, incluindo documentos juntados, propostas de acordo, alegações preliminares e mérito."></textarea>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">3</span>
+      <h2 class="section-title">Análise comparativa</h2>
+    </div>
+    <p class="section-hint">Confronto entre os pedidos da inicial e a resposta da fornecedora — pontos atendidos, não atendidos e divergências.</p>
+    <div class="section-body">
+      <div class="ia-panel">
+        <textarea id="analiseComparativa" class="ia-output" rows="5" placeholder="Resultado da análise: pontos da inicial respondidos, pontos não respondidos, contradições, documentos pendentes."></textarea>
+        <div class="btn-row">
+          <button class="btn" id="btnAnalise" type="button">Gerar análise com IA</button>
+        </div>
+        <p class="status-msg" id="statusAnalise"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">4</span>
+      <h2 class="section-title">Síntese do despacho saneador</h2>
+    </div>
+    <div class="section-body">
+      <textarea id="despachoSaneador" rows="4" placeholder="Transcreva ou resuma o conteúdo do despacho saneador: pontos controvertidos identificados, determinações ao atendente, prazos fixados e diligências determinadas."></textarea>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">5</span>
+      <h2 class="section-title">Providências para continuidade do processo</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="provid-card" data-card="docs">
+        <label class="provid-check">
+          <input type="checkbox" id="chkDocs">
+          Solicitar novos documentos/esclarecimentos
+        </label>
+        <textarea id="docsDetalhe" rows="2" placeholder="Especifique quais documentos ou esclarecimentos serão solicitados, e a quem (consumidor e/ou fornecedora)."></textarea>
+      </div>
+
+      <div class="provid-card" data-card="novoFornecedor">
+        <label class="provid-check">
+          <input type="checkbox" id="chkNovoFornecedor">
+          Incluir nova fornecedora no polo passivo (litisconsórcio)
+        </label>
+        <textarea id="novoFornecedorDetalhe" rows="2" placeholder="Razão social e endereço da nova fornecedora (conforme documentação), e a fundamentação para sua inclusão."></textarea>
+      </div>
+
+      <div class="provid-card" data-card="retificar">
+        <label class="provid-check">
+          <input type="checkbox" id="chkRetificar">
+          Retificar polo passivo (correção de identificação da reclamada)
+        </label>
+        <textarea id="retificarDetalhe" rows="2" placeholder="Dados corretos da empresa (razão social, endereço) e motivo da retificação."></textarea>
+      </div>
+
+      <div class="provid-card" data-card="audiencia">
+        <label class="provid-check">
+          <input type="checkbox" id="chkAudiencia">
+          Agendar audiência de conciliação/instrução
+        </label>
+        <div class="audiencia-grid">
+          <div class="field" style="margin-bottom:0;">
+            <label for="audienciaData">Data sugerida</label>
+            <input type="date" id="audienciaData">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="audienciaHora">Horário</label>
+            <input type="time" id="audienciaHora">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="audienciaModo">Modalidade</label>
+            <select id="audienciaModo">
+              <option value="presencial">Presencial</option>
+              <option value="virtual">Virtual</option>
+              <option value="hibrida">Híbrida</option>
+            </select>
+          </div>
+        </div>
+        <textarea id="audienciaObs" rows="2" placeholder="Observações sobre a audiência (partes a intimar, pauta, documentos a apresentar)."></textarea>
+      </div>
+
+      <div class="provid-card" data-card="outra">
+        <label class="provid-check">
+          <input type="checkbox" id="chkOutra">
+          Outra providência
+        </label>
+        <textarea id="outraDetalhe" rows="2" placeholder="Descreva outra providência necessária (ex: encaminhamento para órgão técnico, suspensão do prazo, etc.)."></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">6</span>
+      <h2 class="section-title">Observações do atendente</h2>
+    </div>
+    <p class="section-hint">Campo livre para anotações pessoais, dúvidas ou pontos a confirmar com a chefia/jurídico.</p>
+    <div class="section-body">
+      <textarea id="obsAtendente" rows="4" placeholder="Suas observações..."></textarea>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">7</span>
+      <h2 class="section-title">Minuta de despacho/encaminhamento</h2>
+    </div>
+    <p class="section-hint">Texto contínuo gerado pela IA a partir de todas as informações preenchidas acima.</p>
+    <div class="section-body">
+      <div class="ia-panel">
+        <textarea id="minutaGerada" class="ia-output" rows="10" placeholder="Clique em 'Gerar minuta' para produzir um texto contínuo, conectando os pedidos, a resposta da fornecedora, o despacho saneador e as providências marcadas."></textarea>
+        <div class="btn-row">
+          <button class="btn" id="btnMinuta" type="button">Gerar minuta com IA</button>
+          <button class="btn secondary" id="btnCopiar" type="button">Copiar texto</button>
+        </div>
+        <p class="status-msg" id="statusMinuta"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="final-actions">
+    <button class="btn secondary" id="btnLimpar" type="button">Limpar formulário</button>
+  </div>
+
+</div>
+
+<script>
+function val(id){ return document.getElementById(id).value.trim(); }
+function checked(id){ return document.getElementById(id).checked; }
+
+// Realce visual dos cards de providência ao marcar o checkbox
+document.querySelectorAll('.provid-card input[type="checkbox"]').forEach(chk => {
+  chk.addEventListener('change', () => {
+    const card = chk.closest('.provid-card');
+    card.classList.toggle('active', chk.checked);
+  });
+});
+
+async function chamarIA(prompt) {
+  const resp = await fetch('/api/gerar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await resp.json();
+  if (!resp.ok) {
+    throw new Error(data.error || 'Erro desconhecido');
+  }
+  return data.texto;
+}
+
+function setLoading(btn, statusEl, loading, labelDefault, labelLoading) {
+  btn.disabled = loading;
+  btn.textContent = loading ? labelLoading : labelDefault;
+  if (loading) {
+    statusEl.textContent = '';
+    statusEl.classList.remove('error');
+  }
+}
+
+// --- Análise comparativa ---
+document.getElementById('btnAnalise').addEventListener('click', async () => {
+  const btn = document.getElementById('btnAnalise');
+  const status = document.getElementById('statusAnalise');
+  setLoading(btn, status, true, 'Gerar análise com IA', 'Analisando...');
+
+  const prompt = "Você é assistente de um atendente do Procon (órgão brasileiro de defesa do consumidor). "
+    + "Com base nos dados abaixo, faça uma análise comparativa objetiva, em texto corrido, em português do Brasil, "
+    + "apontando: (a) quais pedidos da inicial foram atendidos pela fornecedora, (b) quais não foram atendidos, "
+    + "(c) contradições ou pontos obscuros na resposta, e (d) documentos ou esclarecimentos ainda pendentes. "
+    + "Não invente fatos; baseie-se apenas no que foi informado.\n\n"
+    + "PROCESSO N.: " + (val('numProc') || '[não informado]') + "\n"
+    + "CONSUMIDORA(O): " + (val('consumidora') || '[não informado]') + "\n"
+    + "FORNECEDORA: " + (val('fornecedora') || '[não informado]') + "\n\n"
+    + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
+    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
+    + "DESPACHO SANEADOR:\n" + val('despachoSaneador');
+
+  try {
+    const texto = await chamarIA(prompt);
+    document.getElementById('analiseComparativa').value = texto;
+    status.textContent = '';
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+    status.classList.add('error');
+  }
+  setLoading(btn, status, false, 'Gerar análise com IA', '');
+});
+
+// --- Minuta ---
+document.getElementById('btnMinuta').addEventListener('click', async () => {
+  const btn = document.getElementById('btnMinuta');
+  const status = document.getElementById('statusMinuta');
+  setLoading(btn, status, true, 'Gerar minuta com IA', 'Gerando...');
+
+  let providencias = [];
+  if (checked('chkDocs')) providencias.push("Solicitação de novos documentos/esclarecimentos: " + (val('docsDetalhe') || "(detalhar)"));
+  if (checked('chkNovoFornecedor')) providencias.push("Inclusão de nova fornecedora no polo passivo: " + (val('novoFornecedorDetalhe') || "(detalhar)"));
+  if (checked('chkRetificar')) providencias.push("Retificação do polo passivo: " + (val('retificarDetalhe') || "(detalhar)"));
+  if (checked('chkAudiencia')) providencias.push(
+    "Agendamento de audiência - Data: " + (val('audienciaData') || '(a definir)') +
+    ", Horário: " + (val('audienciaHora') || '(a definir)') +
+    ", Modalidade: " + val('audienciaModo') +
+    ". Observações: " + (val('audienciaObs') || 'nenhuma')
+  );
+  if (checked('chkOutra')) providencias.push("Outra providência: " + (val('outraDetalhe') || "(detalhar)"));
+
+  const prompt = "Você é assistente jurídico de um atendente do Procon. Redija, em português do Brasil, formal e em texto contínuo "
+    + "(sem usar marcadores ou listas, em parágrafos corridos), uma minuta de despacho/encaminhamento processual para continuidade "
+    + "do processo administrativo de defesa do consumidor.\n\n"
+    + "DADOS DO PROCESSO:\n"
+    + "Processo n.: " + (val('numProc') || '[número não informado]') + "\n"
+    + "Consumidora(o): " + (val('consumidora') || '[não informado]') + "\n"
+    + "Fornecedora: " + (val('fornecedora') || '[não informado]') + "\n\n"
+    + "Estruture o texto contemplando: 1) breve relato dos pedidos formulados na inicial pela consumidora identificada; "
+    + "2) análise da resposta apresentada pela fornecedora frente aos pedidos; "
+    + "3) síntese do despacho saneador anterior e seu confronto com a resposta da fornecedora; "
+    + "4) as providências determinadas para a continuidade do feito. "
+    + "Use linguagem técnica, mas clara, adequada para constar nos autos.\n\n"
+    + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
+    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
+    + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)') + "\n\n"
+    + "DESPACHO SANEADOR:\n" + val('despachoSaneador') + "\n\n"
+    + "PROVIDÊNCIAS DETERMINADAS:\n" + (providencias.length ? providencias.join(". ") : "(nenhuma providência específica marcada)") + "\n\n"
+    + "OBSERVAÇÕES DO ATENDENTE:\n" + (val('obsAtendente') || '(nenhuma)');
+
+  try {
+    const texto = await chamarIA(prompt);
+    document.getElementById('minutaGerada').value = texto;
+    status.textContent = 'Minuta gerada. Revise antes de protocolar.';
+    status.classList.remove('error');
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+    status.classList.add('error');
+  }
+  setLoading(btn, status, false, 'Gerar minuta com IA', '');
+});
+
+// --- Copiar ---
+document.getElementById('btnCopiar').addEventListener('click', () => {
+  const ta = document.getElementById('minutaGerada');
+  ta.select();
+  document.execCommand('copy');
+  const status = document.getElementById('statusMinuta');
+  status.textContent = 'Texto copiado para a área de transferência.';
+  status.classList.remove('error');
+});
+
+// --- Limpar ---
+document.getElementById('btnLimpar').addEventListener('click', () => {
+  if (!confirm('Tem certeza que deseja limpar todos os campos do formulário?')) return;
+  document.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+    el.checked = false;
+    el.closest('.provid-card').classList.remove('active');
+  });
+  document.getElementById('audienciaModo').value = 'presencial';
+  document.querySelectorAll('.status-msg').forEach(el => { el.textContent = ''; el.classList.remove('error'); });
+});
+</script>
+</body>
+</html>
