@@ -485,10 +485,17 @@
   <div class="section">
     <div class="section-head">
       <span class="section-num">4</span>
-      <h2 class="section-title">Síntese do despacho saneador</h2>
+      <h2 class="section-title">Resolução de prosseguimento</h2>
     </div>
+    <p class="section-hint">Indicação de como o processo administrativo deve seguir: saneamento, solicitação de diligência ou agendamento de audiência.</p>
     <div class="section-body">
-      <textarea id="despachoSaneador" rows="4" placeholder="Transcreva ou resuma o conteúdo do despacho saneador: pontos controvertidos identificados, determinações ao atendente, prazos fixados e diligências determinadas."></textarea>
+      <div class="ia-panel">
+        <textarea id="resolucaoProsseguimento" class="ia-output" rows="5" placeholder="Sugestão de encaminhamento: sanear o feito, solicitar diligência específica, ou agendar audiência de conciliação/instrução — com a justificativa correspondente."></textarea>
+        <div class="btn-row">
+          <button class="btn" id="btnResolucao" type="button">Sugerir resolução com IA</button>
+        </div>
+        <p class="status-msg" id="statusResolucao"></p>
+      </div>
     </div>
   </div>
 
@@ -649,8 +656,7 @@ document.getElementById('btnAnalise').addEventListener('click', async () => {
     + "CONSUMIDORA(O): " + (val('consumidora') || '[não informado]') + "\n"
     + "FORNECEDORA: " + (val('fornecedora') || '[não informado]') + "\n\n"
     + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
-    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
-    + "DESPACHO SANEADOR:\n" + val('despachoSaneador');
+    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora');
 
   try {
     const texto = await chamarIA(prompt);
@@ -661,6 +667,38 @@ document.getElementById('btnAnalise').addEventListener('click', async () => {
     status.classList.add('error');
   }
   setLoading(btn, status, false, 'Gerar análise com IA', '');
+});
+
+// --- Resolução de prosseguimento ---
+document.getElementById('btnResolucao').addEventListener('click', async () => {
+  const btn = document.getElementById('btnResolucao');
+  const status = document.getElementById('statusResolucao');
+  setLoading(btn, status, true, 'Sugerir resolução com IA', 'Analisando...');
+
+  const prompt = "Você é assistente de um atendente do Procon (órgão brasileiro de defesa do consumidor). "
+    + "Com base nos dados abaixo, sugira como o processo administrativo deve prosseguir, em texto corrido, em português do Brasil, "
+    + "em parágrafos concatenados, sem usar marcadores, números, letras ou divisões de tópicos. "
+    + "Avalie se o processo já está pronto para ser saneado e decidido, ou se é necessário solicitar diligência específica "
+    + "(indicando qual) ou agendar audiência de conciliação/instrução (indicando a finalidade), sempre com foco na resolução "
+    + "do problema do consumidor. Justifique a sugestão de forma objetiva, com base no confronto entre os pedidos da inicial "
+    + "e a resposta da fornecedora. Não invente fatos; baseie-se apenas no que foi informado.\n\n"
+    + "PROCESSO N.: " + (val('numProc') || '[não informado]') + "\n"
+    + "CONSUMIDORA(O): " + (val('consumidora') || '[não informado]') + "\n"
+    + "FORNECEDORA: " + (val('fornecedora') || '[não informado]') + "\n\n"
+    + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
+    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
+    + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)');
+
+  try {
+    const texto = await chamarIA(prompt);
+    document.getElementById('resolucaoProsseguimento').value = texto;
+    status.textContent = '';
+    status.classList.remove('error');
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+    status.classList.add('error');
+  }
+  setLoading(btn, status, false, 'Sugerir resolução com IA', '');
 });
 
 // --- Minuta ---
@@ -686,7 +724,7 @@ document.getElementById('btnMinuta').addEventListener('click', async () => {
     + "REQUISITOS DE FORMA, OBRIGATÓRIOS: o texto deve ser corrido, em parágrafos concatenados, conectados por conectivos "
     + "e transições naturais. NÃO use divisão por tópicos, números, marcadores, títulos de seção ou qualquer estrutura "
     + "que separe visualmente as partes do raciocínio. NÃO repita ou liste cada item separadamente; em vez disso, sintetize "
-    + "os pontos principais de cada informação (pedidos, resposta da fornecedora, despacho saneador, providências) de forma "
+    + "os pontos principais de cada informação (pedidos, resposta da fornecedora, resolução de prosseguimento, providências) de forma "
     + "fluida dentro da narrativa. O texto deve ter foco na resolução do problema do consumidor, conduzindo o raciocínio "
     + "naturalmente até as providências determinadas para a continuidade do feito.\n\n"
     + "DADOS DO PROCESSO:\n"
@@ -696,7 +734,7 @@ document.getElementById('btnMinuta').addEventListener('click', async () => {
     + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
     + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
     + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)') + "\n\n"
-    + "DESPACHO SANEADOR:\n" + val('despachoSaneador') + "\n\n"
+    + "RESOLUÇÃO DE PROSSEGUIMENTO:\n" + (val('resolucaoProsseguimento') || '(não preenchida)') + "\n\n"
     + "PROVIDÊNCIAS DETERMINADAS:\n" + (providencias.length ? providencias.join(". ") : "(nenhuma providência específica marcada)") + "\n\n"
     + "OBSERVAÇÕES DO ATENDENTE:\n" + (val('obsAtendente') || '(nenhuma)');
 
