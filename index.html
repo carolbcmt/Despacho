@@ -432,10 +432,9 @@
     <div class="section-body">
       <textarea id="pedidosIniciais" rows="4" placeholder="Descreva, de forma objetiva, todos os pedidos formulados pelo consumidor na reclamação inicial (ex: restituição de valores, troca de produto, cancelamento de contrato, indenização, etc.)"></textarea>
       <div class="upload-box">
-        <label class="upload-label" for="anexoInicial">Anexar documentos da inicial (PDF, imagem ou texto)</label>
+        <label class="upload-label" for="anexoInicial">Anexar documentos da inicial (PDF, imagem ou texto) — o texto é extraído automaticamente</label>
         <div class="upload-row">
           <input type="file" id="anexoInicial" accept=".pdf,.png,.jpg,.jpeg,.txt" multiple>
-          <button class="btn secondary" id="btnExtrairInicial" type="button">Extrair texto e preencher</button>
         </div>
         <ul class="file-list" id="listaAnexoInicial"></ul>
         <p class="upload-status" id="statusAnexoInicial"></p>
@@ -452,10 +451,9 @@
     <div class="section-body">
       <textarea id="respostaFornecedora" rows="6" placeholder="Cole ou transcreva integralmente (ou em resumo fiel) a resposta/defesa apresentada pela empresa reclamada, incluindo documentos juntados, propostas de acordo, alegações preliminares e mérito."></textarea>
       <div class="upload-box">
-        <label class="upload-label" for="anexoResposta">Anexar documentos da resposta da fornecedora (PDF, imagem ou texto)</label>
+        <label class="upload-label" for="anexoResposta">Anexar documentos da resposta da fornecedora (PDF, imagem ou texto) — o texto é extraído automaticamente</label>
         <div class="upload-row">
           <input type="file" id="anexoResposta" accept=".pdf,.png,.jpg,.jpeg,.txt" multiple>
-          <button class="btn secondary" id="btnExtrairResposta" type="button">Extrair texto e preencher</button>
         </div>
         <ul class="file-list" id="listaAnexoResposta"></ul>
         <p class="upload-status" id="statusAnexoResposta"></p>
@@ -777,27 +775,18 @@ const anexos = {
   resposta: []
 };
 
-function setupUpload(inputId, listId, btnId, statusId, targetTextareaId, grupo, contextoPrompt) {
+function setupUpload(inputId, listId, statusId, targetTextareaId, grupo) {
   const input = document.getElementById(inputId);
   const list = document.getElementById(listId);
-  const btn = document.getElementById(btnId);
   const status = document.getElementById(statusId);
-
-  input.addEventListener('change', () => {
-    for (const file of input.files) {
-      anexos[grupo].push(file);
-    }
-    input.value = '';
-    renderFileList();
-  });
 
   function renderFileList() {
     list.innerHTML = '';
-    anexos[grupo].forEach((file, idx) => {
+    anexos[grupo].forEach((item, idx) => {
       const li = document.createElement('li');
       const span = document.createElement('span');
       span.className = 'file-name';
-      span.textContent = file.name;
+      span.textContent = item.file.name + (item.status === 'processando' ? ' — processando...' : item.status === 'erro' ? ' — erro' : ' — ok');
       const removeBtn = document.createElement('button');
       removeBtn.className = 'file-remove';
       removeBtn.type = 'button';
@@ -855,4 +844,11 @@ function setupUpload(inputId, listId, btnId, statusId, targetTextareaId, grupo, 
     });
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Erro ao processar imagem');
-    
+    return data.texto;
+  }
+
+  function appendToTextarea(texto, fileName) {
+    const textarea = document.getElementById(targetTextareaId);
+    const novoConteudo = textarea.value.trim();
+    const bloco = '--- Documento: ' + fileName + ' ---\n' + texto;
+    textarea.value = (novoConteu
