@@ -1,62 +1,858 @@
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atendimento Procon - Continuidade Processual</title>
+<style>
+  :root {
+    --bg: #F6F4EF;
+    --paper: #FFFFFF;
+    --ink: #1F2421;
+    --ink-soft: #5C645E;
+    --line: #D9D4C8;
+    --accent: #1F6F50;
+    --accent-soft: #E4EFE8;
+    --accent-deep: #134A35;
+    --warn-bg: #FBEAE3;
+    --warn-text: #7A2E14;
+    --serif: "Source Serif Pro", Georgia, "Times New Roman", serif;
+    --sans: "Inter", "Segoe UI", Arial, sans-serif;
+    --mono: "JetBrains Mono", "Courier New", monospace;
   }
 
-  const { prompt, image } = req.body;
+  * { box-sizing: border-box; }
 
-  if (!prompt) {
-    return res.status(400).json({ error: 'Texto do pedido (prompt) não informado' });
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    padding: 0 1rem 4rem;
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-
-  if (!apiKey) {
-    return res.status(500).json({
-      error: 'Chave de API não configurada no servidor. Configure a variável ANTHROPIC_API_KEY na Vercel.'
-    });
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
   }
 
-  // Monta o conteúdo da mensagem: texto simples, ou texto + imagem (para OCR)
-  let content;
-  if (image && image.data && image.media_type) {
-    content = [
-      { type: 'image', source: { type: 'base64', media_type: image.media_type, data: image.data } },
-      { type: 'text', text: prompt }
-    ];
-  } else {
-    content = prompt;
+  header.page-head {
+    padding: 2.5rem 0 1.5rem;
+    border-bottom: 2px solid var(--ink);
   }
 
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 8192,
-        messages: [{ role: 'user', content }]
-      })
-    });
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    margin: 0 0 0.4rem;
+  }
 
-    const data = await response.json();
+  h1 {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.01em;
+  }
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: data.error?.message || 'Erro ao chamar a API da Anthropic'
-      });
-    }
+  .subtitle {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 540px;
+  }
 
-    const texto = (data.content || [])
-      .map((bloco) => bloco.text || '')
-      .join('\n');
+  /* Header do processo */
+  .processo-head {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
 
-    return res.status(200).json({ texto });
-  } catch (err) {
-    return res.status(500).json({ error: 'Erro de conexão com a API: ' + err.message });
+  .processo-head .label-top {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 0.75rem;
+  }
+
+  .processo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .processo-grid .full { grid-column: 1 / -1; }
+
+  @media (max-width: 540px) {
+    .processo-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Seções numeradas */
+  .section {
+    margin: 1.75rem 0;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .section-num {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 2ch;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .section-hint {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 0.75rem;
+    padding-left: calc(2ch + 0.75rem);
+  }
+
+  .section-body {
+    padding-left: calc(2ch + 0.75rem);
+  }
+
+  @media (max-width: 480px) {
+    .section-hint, .section-body { padding-left: 0; }
+  }
+
+  /* Form elements */
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.3rem;
+  }
+
+  input[type="text"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.55rem 0.7rem;
+    margin-bottom: 0;
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: 1.6;
+    font-family: var(--sans);
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .field { margin-bottom: 1rem; }
+
+  /* Cards de providência */
+  .provid-card {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    background: var(--paper);
+    transition: border-color 0.15s ease;
+  }
+
+  .provid-card.active {
+    border-color: var(--accent);
+  }
+
+  .provid-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+
+  .provid-check input {
+    width: auto;
+    margin-top: 0.2rem;
+    accent-color: var(--accent);
+  }
+
+  .provid-card textarea, .provid-card .audiencia-grid {
+    margin-top: 0.7rem;
+  }
+
+  .audiencia-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+  }
+
+  @media (max-width: 540px) {
+    .audiencia-grid { grid-template-columns: 1fr; }
+  }
+
+  .audiencia-grid label { font-size: 11px; }
+
+  /* IA panels */
+  .ia-panel {
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 1.1rem 1.25rem;
+    background: var(--accent-soft);
+  }
+
+  .ia-panel .section-hint { padding-left: 0; color: var(--accent-deep); opacity: 0.85; }
+
+  textarea.ia-output {
+    background: var(--paper);
+  }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0.55rem 1.1rem;
+    border-radius: 4px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.05s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn:hover { opacity: 0.9; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: wait; }
+
+  .btn.secondary {
+    background: transparent;
+    color: var(--accent-deep);
+    border-color: var(--accent);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .status-msg {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 0.5rem;
+    min-height: 1.2em;
+  }
+
+  .status-msg.error { color: var(--warn-text); }
+
+  /* Final actions */
+  .final-actions {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Config notice */
+  .config-notice {
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    border-radius: 4px;
+    padding: 0.7rem 1rem;
+    font-size: 13px;
+    margin-top: 1.5rem;
+    display: none;
+  }
+
+  .config-notice.show { display: block; }
+
+  ::placeholder {
+    color: #B6B0A2;
+  }
+
+  /* Upload de documentos */
+  .upload-box {
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 0.9rem 1rem;
+    margin-top: 0.6rem;
+    background: var(--paper);
+  }
+
+  .upload-box .upload-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .upload-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .upload-row input[type="file"] {
+    font-size: 13px;
+  }
+
+  .file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.6rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .file-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 13px;
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .file-list .file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-list .file-remove {
+    border: none;
+    background: none;
+    color: var(--warn-text);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 0.2rem;
+  }
+
+  .upload-status {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 0.4rem;
+    min-height: 1.2em;
+  }
+
+  .upload-status.error { color: var(--warn-text); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <p class="eyebrow">Procon · Defesa do consumidor</p>
+    <h1>Atendimento &amp; continuidade processual</h1>
+    <p class="subtitle">Formulário para análise de pedidos da inicial, resposta da fornecedora e providências determinadas no despacho saneador.</p>
+  </header>
+
+  <div id="configNotice" class="config-notice"></div>
+
+  <div class="processo-head">
+    <p class="label-top">Cabeçalho do processo</p>
+    <div class="processo-grid">
+      <div class="full field" style="margin-bottom:0;">
+        <label for="numProc">Processo n.</label>
+        <input type="text" id="numProc" placeholder="Ex: 2026.001234-5">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="consumidora">Consumidora(o)</label>
+        <input type="text" id="consumidora" placeholder="Conforme documentação juntada">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="fornecedora">Fornecedora</label>
+        <input type="text" id="fornecedora" placeholder="Conforme documentação juntada">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="dataAt">Data do atendimento</label>
+        <input type="date" id="dataAt">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="atendente">Atendente responsável</label>
+        <input type="text" id="atendente" placeholder="Nome do atendente">
+      </div>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">1</span>
+      <h2 class="section-title">Pedidos formulados na petição inicial</h2>
+    </div>
+    <div class="section-body">
+      <textarea id="pedidosIniciais" rows="4" placeholder="Descreva, de forma objetiva, todos os pedidos formulados pelo consumidor na reclamação inicial (ex: restituição de valores, troca de produto, cancelamento de contrato, indenização, etc.)"></textarea>
+      <div class="upload-box">
+        <label class="upload-label" for="anexoInicial">Anexar documentos da inicial (PDF, imagem ou texto)</label>
+        <div class="upload-row">
+          <input type="file" id="anexoInicial" accept=".pdf,.png,.jpg,.jpeg,.txt" multiple>
+          <button class="btn secondary" id="btnExtrairInicial" type="button">Extrair texto e preencher</button>
+        </div>
+        <ul class="file-list" id="listaAnexoInicial"></ul>
+        <p class="upload-status" id="statusAnexoInicial"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">2</span>
+      <h2 class="section-title">Resposta apresentada pela fornecedora</h2>
+    </div>
+    <div class="section-body">
+      <textarea id="respostaFornecedora" rows="6" placeholder="Cole ou transcreva integralmente (ou em resumo fiel) a resposta/defesa apresentada pela empresa reclamada, incluindo documentos juntados, propostas de acordo, alegações preliminares e mérito."></textarea>
+      <div class="upload-box">
+        <label class="upload-label" for="anexoResposta">Anexar documentos da resposta da fornecedora (PDF, imagem ou texto)</label>
+        <div class="upload-row">
+          <input type="file" id="anexoResposta" accept=".pdf,.png,.jpg,.jpeg,.txt" multiple>
+          <button class="btn secondary" id="btnExtrairResposta" type="button">Extrair texto e preencher</button>
+        </div>
+        <ul class="file-list" id="listaAnexoResposta"></ul>
+        <p class="upload-status" id="statusAnexoResposta"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">3</span>
+      <h2 class="section-title">Análise comparativa</h2>
+    </div>
+    <p class="section-hint">Confronto entre os pedidos da inicial e a resposta da fornecedora — pontos atendidos, não atendidos e divergências.</p>
+    <div class="section-body">
+      <div class="ia-panel">
+        <textarea id="analiseComparativa" class="ia-output" rows="5" placeholder="Resultado da análise: pontos da inicial respondidos, pontos não respondidos, contradições, documentos pendentes."></textarea>
+        <div class="btn-row">
+          <button class="btn" id="btnAnalise" type="button">Gerar análise com IA</button>
+        </div>
+        <p class="status-msg" id="statusAnalise"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">4</span>
+      <h2 class="section-title">Resolução de prosseguimento</h2>
+    </div>
+    <p class="section-hint">Indicação de como o processo administrativo deve seguir: saneamento, solicitação de diligência ou agendamento de audiência.</p>
+    <div class="section-body">
+      <div class="ia-panel">
+        <textarea id="resolucaoProsseguimento" class="ia-output" rows="5" placeholder="Sugestão de encaminhamento: sanear o feito, solicitar diligência específica, ou agendar audiência de conciliação/instrução — com a justificativa correspondente."></textarea>
+        <div class="btn-row">
+          <button class="btn" id="btnResolucao" type="button">Sugerir resolução com IA</button>
+        </div>
+        <p class="status-msg" id="statusResolucao"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">5</span>
+      <h2 class="section-title">Providências para continuidade do processo</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="provid-card" data-card="docs">
+        <label class="provid-check">
+          <input type="checkbox" id="chkDocs">
+          Solicitar novos documentos/esclarecimentos
+        </label>
+        <textarea id="docsDetalhe" rows="2" placeholder="Especifique quais documentos ou esclarecimentos serão solicitados, e a quem (consumidor e/ou fornecedora)."></textarea>
+      </div>
+
+      <div class="provid-card" data-card="novoFornecedor">
+        <label class="provid-check">
+          <input type="checkbox" id="chkNovoFornecedor">
+          Incluir nova fornecedora no polo passivo (litisconsórcio)
+        </label>
+        <textarea id="novoFornecedorDetalhe" rows="2" placeholder="Razão social e endereço da nova fornecedora (conforme documentação), e a fundamentação para sua inclusão."></textarea>
+      </div>
+
+      <div class="provid-card" data-card="retificar">
+        <label class="provid-check">
+          <input type="checkbox" id="chkRetificar">
+          Retificar polo passivo (correção de identificação da reclamada)
+        </label>
+        <textarea id="retificarDetalhe" rows="2" placeholder="Dados corretos da empresa (razão social, endereço) e motivo da retificação."></textarea>
+      </div>
+
+      <div class="provid-card" data-card="audiencia">
+        <label class="provid-check">
+          <input type="checkbox" id="chkAudiencia">
+          Agendar audiência de conciliação/instrução
+        </label>
+        <div class="audiencia-grid">
+          <div class="field" style="margin-bottom:0;">
+            <label for="audienciaData">Data sugerida</label>
+            <input type="date" id="audienciaData">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="audienciaHora">Horário</label>
+            <input type="time" id="audienciaHora">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="audienciaModo">Modalidade</label>
+            <select id="audienciaModo">
+              <option value="presencial">Presencial</option>
+              <option value="virtual">Virtual</option>
+              <option value="hibrida">Híbrida</option>
+            </select>
+          </div>
+        </div>
+        <textarea id="audienciaObs" rows="2" placeholder="Observações sobre a audiência (partes a intimar, pauta, documentos a apresentar)."></textarea>
+      </div>
+
+      <div class="provid-card" data-card="outra">
+        <label class="provid-check">
+          <input type="checkbox" id="chkOutra">
+          Outra providência
+        </label>
+        <textarea id="outraDetalhe" rows="2" placeholder="Descreva outra providência necessária (ex: encaminhamento para órgão técnico, suspensão do prazo, etc.)."></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">6</span>
+      <h2 class="section-title">Minuta de despacho/encaminhamento</h2>
+    </div>
+    <p class="section-hint">Texto contínuo gerado pela IA a partir de todas as informações preenchidas acima.</p>
+    <div class="section-body">
+      <div class="ia-panel">
+        <textarea id="minutaGerada" class="ia-output" rows="10" placeholder="Clique em 'Gerar minuta' para produzir um texto contínuo, conectando os pedidos, a resposta da fornecedora, o despacho saneador e as providências marcadas."></textarea>
+        <div class="btn-row">
+          <button class="btn" id="btnMinuta" type="button">Gerar minuta com IA</button>
+          <button class="btn secondary" id="btnCopiar" type="button">Copiar texto</button>
+        </div>
+        <p class="status-msg" id="statusMinuta"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="final-actions">
+    <button class="btn secondary" id="btnLimpar" type="button">Limpar formulário</button>
+  </div>
+
+</div>
+
+<script>
+function val(id){ return document.getElementById(id).value.trim(); }
+function checked(id){ return document.getElementById(id).checked; }
+
+// Realce visual dos cards de providência ao marcar o checkbox
+document.querySelectorAll('.provid-card input[type="checkbox"]').forEach(chk => {
+  chk.addEventListener('change', () => {
+    const card = chk.closest('.provid-card');
+    card.classList.toggle('active', chk.checked);
+  });
+});
+
+async function chamarIA(prompt) {
+  const resp = await fetch('/api/gerar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await resp.json();
+  if (!resp.ok) {
+    throw new Error(data.error || 'Erro desconhecido');
+  }
+  return data.texto;
+}
+
+function setLoading(btn, statusEl, loading, labelDefault, labelLoading) {
+  btn.disabled = loading;
+  btn.textContent = loading ? labelLoading : labelDefault;
+  if (loading) {
+    statusEl.textContent = '';
+    statusEl.classList.remove('error');
   }
 }
+
+// --- Análise comparativa ---
+document.getElementById('btnAnalise').addEventListener('click', async () => {
+  const btn = document.getElementById('btnAnalise');
+  const status = document.getElementById('statusAnalise');
+  setLoading(btn, status, true, 'Gerar análise com IA', 'Analisando...');
+
+  const prompt = "Você é assistente de um atendente do Procon (órgão brasileiro de defesa do consumidor). "
+    + "Com base nos dados abaixo, faça uma análise comparativa em texto corrido, em português do Brasil, "
+    + "em parágrafos concatenados, sem usar marcadores, números, letras ou divisões de tópicos. "
+    + "A análise deve abordar de forma fluida: quais pedidos da inicial foram atendidos pela fornecedora, quais não foram, "
+    + "eventuais contradições ou pontos obscuros na resposta, e quais documentos ou esclarecimentos ainda estão pendentes, "
+    + "sempre com foco na resolução do problema do consumidor. "
+    + "Não invente fatos; baseie-se apenas no que foi informado.\n\n"
+    + "PROCESSO N.: " + (val('numProc') || '[não informado]') + "\n"
+    + "CONSUMIDORA(O): " + (val('consumidora') || '[não informado]') + "\n"
+    + "FORNECEDORA: " + (val('fornecedora') || '[não informado]') + "\n\n"
+    + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
+    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora');
+
+  try {
+    const texto = await chamarIA(prompt);
+    document.getElementById('analiseComparativa').value = texto;
+    status.textContent = '';
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+    status.classList.add('error');
+  }
+  setLoading(btn, status, false, 'Gerar análise com IA', '');
+});
+
+// --- Resolução de prosseguimento ---
+document.getElementById('btnResolucao').addEventListener('click', async () => {
+  const btn = document.getElementById('btnResolucao');
+  const status = document.getElementById('statusResolucao');
+  setLoading(btn, status, true, 'Sugerir resolução com IA', 'Analisando...');
+
+  const prompt = "Você é assistente de um atendente do Procon (órgão brasileiro de defesa do consumidor). "
+    + "Com base nos dados abaixo, sugira como o processo administrativo deve prosseguir, em texto corrido, em português do Brasil, "
+    + "em parágrafos concatenados, sem usar marcadores, números, letras ou divisões de tópicos. "
+    + "Avalie se o processo já está pronto para ser saneado e decidido, ou se é necessário solicitar diligência específica "
+    + "(indicando qual) ou agendar audiência de conciliação/instrução (indicando a finalidade), sempre com foco na resolução "
+    + "do problema do consumidor. Justifique a sugestão de forma objetiva, com base no confronto entre os pedidos da inicial "
+    + "e a resposta da fornecedora. Não invente fatos; baseie-se apenas no que foi informado.\n\n"
+    + "PROCESSO N.: " + (val('numProc') || '[não informado]') + "\n"
+    + "CONSUMIDORA(O): " + (val('consumidora') || '[não informado]') + "\n"
+    + "FORNECEDORA: " + (val('fornecedora') || '[não informado]') + "\n\n"
+    + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
+    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
+    + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)');
+
+  try {
+    const texto = await chamarIA(prompt);
+    document.getElementById('resolucaoProsseguimento').value = texto;
+    status.textContent = '';
+    status.classList.remove('error');
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+    status.classList.add('error');
+  }
+  setLoading(btn, status, false, 'Sugerir resolução com IA', '');
+});
+
+// --- Minuta ---
+document.getElementById('btnMinuta').addEventListener('click', async () => {
+  const btn = document.getElementById('btnMinuta');
+  const status = document.getElementById('statusMinuta');
+  setLoading(btn, status, true, 'Gerar minuta com IA', 'Gerando...');
+
+  let providencias = [];
+  if (checked('chkDocs')) providencias.push("Solicitação de novos documentos/esclarecimentos: " + (val('docsDetalhe') || "(detalhar)"));
+  if (checked('chkNovoFornecedor')) providencias.push("Inclusão de nova fornecedora no polo passivo: " + (val('novoFornecedorDetalhe') || "(detalhar)"));
+  if (checked('chkRetificar')) providencias.push("Retificação do polo passivo: " + (val('retificarDetalhe') || "(detalhar)"));
+  if (checked('chkAudiencia')) providencias.push(
+    "Agendamento de audiência - Data: " + (val('audienciaData') || '(a definir)') +
+    ", Horário: " + (val('audienciaHora') || '(a definir)') +
+    ", Modalidade: " + val('audienciaModo') +
+    ". Observações: " + (val('audienciaObs') || 'nenhuma')
+  );
+  if (checked('chkOutra')) providencias.push("Outra providência: " + (val('outraDetalhe') || "(detalhar)"));
+
+  const prompt = "Você é assistente jurídico de um atendente do Procon. Redija, em português do Brasil, formal, "
+    + "uma minuta de despacho/encaminhamento processual para continuidade do processo administrativo de defesa do consumidor.\n\n"
+    + "REQUISITOS DE FORMA, OBRIGATÓRIOS: o texto deve ser corrido, em parágrafos concatenados, conectados por conectivos "
+    + "e transições naturais. NÃO use divisão por tópicos, números, marcadores, títulos de seção ou qualquer estrutura "
+    + "que separe visualmente as partes do raciocínio. NÃO repita ou liste cada item separadamente; em vez disso, sintetize "
+    + "os pontos principais de cada informação (pedidos, resposta da fornecedora, resolução de prosseguimento, providências) de forma "
+    + "fluida dentro da narrativa. O texto deve ter foco na resolução do problema do consumidor, conduzindo o raciocínio "
+    + "naturalmente até as providências determinadas para a continuidade do feito. "
+    + "EXTENSÃO: produza um texto de tamanho intermediário, com aproximadamente 4 a 6 parágrafos bem desenvolvidos, "
+    + "garantindo que o texto seja concluído (com fecho adequado) e não termine de forma abrupta ou cortada.\n\n"
+    + "DADOS DO PROCESSO:\n"
+    + "Processo n.: " + (val('numProc') || '[número não informado]') + "\n"
+    + "Consumidora(o): " + (val('consumidora') || '[não informado]') + "\n"
+    + "Fornecedora: " + (val('fornecedora') || '[não informado]') + "\n\n"
+    + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
+    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
+    + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)') + "\n\n"
+    + "RESOLUÇÃO DE PROSSEGUIMENTO:\n" + (val('resolucaoProsseguimento') || '(não preenchida)') + "\n\n"
+    + "PROVIDÊNCIAS DETERMINADAS:\n" + (providencias.length ? providencias.join(". ") : "(nenhuma providência específica marcada)");
+
+  try {
+    const texto = await chamarIA(prompt);
+    document.getElementById('minutaGerada').value = texto;
+    status.textContent = 'Minuta gerada. Revise antes de protocolar.';
+    status.classList.remove('error');
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+    status.classList.add('error');
+  }
+  setLoading(btn, status, false, 'Gerar minuta com IA', '');
+});
+
+// --- Copiar ---
+document.getElementById('btnCopiar').addEventListener('click', () => {
+  const ta = document.getElementById('minutaGerada');
+  ta.select();
+  document.execCommand('copy');
+  const status = document.getElementById('statusMinuta');
+  status.textContent = 'Texto copiado para a área de transferência.';
+  status.classList.remove('error');
+});
+
+// --- Limpar ---
+document.getElementById('btnLimpar').addEventListener('click', () => {
+  if (!confirm('Tem certeza que deseja limpar todos os campos do formulário?')) return;
+  document.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+    el.checked = false;
+    el.closest('.provid-card').classList.remove('active');
+  });
+  document.getElementById('audienciaModo').value = 'presencial';
+  document.querySelectorAll('.status-msg, .upload-status').forEach(el => { el.textContent = ''; el.classList.remove('error'); });
+  anexos.inicial = [];
+  anexos.resposta = [];
+  document.getElementById('listaAnexoInicial').innerHTML = '';
+  document.getElementById('listaAnexoResposta').innerHTML = '';
+});
+
+// --- Anexos de documentos (extração de texto) ---
+
+// Configura o worker do PDF.js
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+const anexos = {
+  inicial: [],
+  resposta: []
+};
+
+function setupUpload(inputId, listId, btnId, statusId, targetTextareaId, grupo, contextoPrompt) {
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  const btn = document.getElementById(btnId);
+  const status = document.getElementById(statusId);
+
+  input.addEventListener('change', () => {
+    for (const file of input.files) {
+      anexos[grupo].push(file);
+    }
+    input.value = '';
+    renderFileList();
+  });
+
+  function renderFileList() {
+    list.innerHTML = '';
+    anexos[grupo].forEach((file, idx) => {
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.className = 'file-name';
+      span.textContent = file.name;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'file-remove';
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remover';
+      removeBtn.addEventListener('click', () => {
+        anexos[grupo].splice(idx, 1);
+        renderFileList();
+      });
+      li.appendChild(span);
+      li.appendChild(removeBtn);
+      list.appendChild(li);
+    });
+  }
+
+  async function extractPdfText(file) {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let texto = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      texto += pageText + '\n';
+    }
+    return texto.trim();
+  }
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function extractImageText(file) {
+    const base64 = await readFileAsBase64(file);
+    const resp = await fetch('/api/gerar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: 'Transcreva fielmente todo o texto visível neste documento/imagem, sem comentários adicionais, sem resumir.',
+        image: { data: base64, media_type: file.type || 'image/jpeg' }
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Erro ao processar imagem');
+    
