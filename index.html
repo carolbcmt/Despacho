@@ -572,18 +572,6 @@
   <div class="section">
     <div class="section-head">
       <span class="section-num">6</span>
-      <h2 class="section-title">Observações do atendente</h2>
-    </div>
-    <p class="section-hint">Campo livre para anotações pessoais, dúvidas ou pontos a confirmar com a chefia/jurídico.</p>
-    <div class="section-body">
-      <textarea id="obsAtendente" rows="4" placeholder="Suas observações..."></textarea>
-    </div>
-  </div>
-
-  <!-- 7 -->
-  <div class="section">
-    <div class="section-head">
-      <span class="section-num">7</span>
       <h2 class="section-title">Minuta de despacho/encaminhamento</h2>
     </div>
     <p class="section-hint">Texto contínuo gerado pela IA a partir de todas as informações preenchidas acima.</p>
@@ -726,7 +714,9 @@ document.getElementById('btnMinuta').addEventListener('click', async () => {
     + "que separe visualmente as partes do raciocínio. NÃO repita ou liste cada item separadamente; em vez disso, sintetize "
     + "os pontos principais de cada informação (pedidos, resposta da fornecedora, resolução de prosseguimento, providências) de forma "
     + "fluida dentro da narrativa. O texto deve ter foco na resolução do problema do consumidor, conduzindo o raciocínio "
-    + "naturalmente até as providências determinadas para a continuidade do feito.\n\n"
+    + "naturalmente até as providências determinadas para a continuidade do feito. "
+    + "EXTENSÃO: produza um texto de tamanho intermediário, com aproximadamente 4 a 6 parágrafos bem desenvolvidos, "
+    + "garantindo que o texto seja concluído (com fecho adequado) e não termine de forma abrupta ou cortada.\n\n"
     + "DADOS DO PROCESSO:\n"
     + "Processo n.: " + (val('numProc') || '[número não informado]') + "\n"
     + "Consumidora(o): " + (val('consumidora') || '[não informado]') + "\n"
@@ -735,8 +725,7 @@ document.getElementById('btnMinuta').addEventListener('click', async () => {
     + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
     + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)') + "\n\n"
     + "RESOLUÇÃO DE PROSSEGUIMENTO:\n" + (val('resolucaoProsseguimento') || '(não preenchida)') + "\n\n"
-    + "PROVIDÊNCIAS DETERMINADAS:\n" + (providencias.length ? providencias.join(". ") : "(nenhuma providência específica marcada)") + "\n\n"
-    + "OBSERVAÇÕES DO ATENDENTE:\n" + (val('obsAtendente') || '(nenhuma)');
+    + "PROVIDÊNCIAS DETERMINADAS:\n" + (providencias.length ? providencias.join(". ") : "(nenhuma providência específica marcada)");
 
   try {
     const texto = await chamarIA(prompt);
