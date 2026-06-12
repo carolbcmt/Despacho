@@ -851,4 +851,60 @@ function setupUpload(inputId, listId, statusId, targetTextareaId, grupo) {
     const textarea = document.getElementById(targetTextareaId);
     const novoConteudo = textarea.value.trim();
     const bloco = '--- Documento: ' + fileName + ' ---\n' + texto;
-    textarea.value = (novoConteu
+    textarea.value = (novoConteudo ? novoConteudo + '\n\n' : '') + bloco;
+  }
+
+  input.addEventListener('change', async () => {
+    const files = Array.from(input.files);
+    input.value = '';
+    if (files.length === 0) return;
+
+    status.textContent = '';
+    status.classList.remove('error');
+
+    for (const file of files) {
+      const item = { file, status: 'processando' };
+      anexos[grupo].push(item);
+      renderFileList();
+
+      try {
+        let texto = '';
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+          texto = await extractPdfText(file);
+          if (!texto) {
+            item.status = 'erro';
+            status.textContent = 'Aviso: "' + file.name + '" parece ser um PDF digitalizado (sem texto). Anexe como imagem (PNG/JPG) para usar OCR.';
+            status.classList.add('error');
+            renderFileList();
+            continue;
+          }
+        } else if (file.type.startsWith('image/')) {
+          texto = await extractImageText(file);
+        } else {
+          texto = await readFileAsText(file);
+        }
+
+        if (texto) {
+          appendToTextarea(texto, file.name);
+          item.status = 'ok';
+          if (!status.classList.contains('error')) {
+            status.textContent = 'Texto de "' + file.name + '" extraído e adicionado ao campo acima. Revise antes de continuar.';
+          }
+        } else {
+          item.status = 'erro';
+        }
+      } catch (e) {
+        item.status = 'erro';
+        status.textContent = 'Erro ao processar "' + file.name + '": ' + e.message;
+        status.classList.add('error');
+      }
+      renderFileList();
+    }
+  });
+}
+
+setupUpload('anexoInicial', 'listaAnexoInicial', 'statusAnexoInicial', 'pedidosIniciais', 'inicial');
+setupUpload('anexoResposta', 'listaAnexoResposta', 'statusAnexoResposta', 'respostaFornecedora', 'resposta');
+</script>
+</body>
+</html>
