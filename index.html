@@ -3,20 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Atendimento Procon - Continuidade Processual</title>
+<title>Atendimento Procon VG - Continuidade Processual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #F6F4EF;
+    --bg: #F2F4F1;
     --paper: #FFFFFF;
-    --ink: #1F2421;
-    --ink-soft: #5C645E;
-    --line: #D9D4C8;
-    --accent: #1F6F50;
-    --accent-soft: #E4EFE8;
-    --accent-deep: #134A35;
+    --ink: #2E2E2E;
+    --ink-soft: #6E756F;
+    --line: #DEE2DC;
+    --green: #1E9447;
+    --green-deep: #146634;
+    --green-soft: #E7F4EC;
+    --coral: #D6452C;
+    --coral-deep: #AE3520;
+    --coral-soft: #FBEAE4;
     --warn-bg: #FBEAE3;
     --warn-text: #7A2E14;
-    --serif: "Source Serif Pro", Georgia, "Times New Roman", serif;
+    --display: "Space Grotesk", "Inter", "Segoe UI", Arial, sans-serif;
     --sans: "Inter", "Segoe UI", Arial, sans-serif;
     --mono: "JetBrains Mono", "Courier New", monospace;
   }
@@ -37,8 +43,69 @@
     margin: 0 auto;
   }
 
-  header.page-head {
-    padding: 2.5rem 0 1.5rem;
+  header.letterhead {
+    padding: 1.5rem 0 0;
+  }
+
+  .letterhead-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .letterhead-logo {
+    height: 52px;
+    width: auto;
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .letterhead-logo--wide {
+    height: 44px;
+    margin-left: auto;
+  }
+
+  .letterhead-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .lh-state, .lh-city, .lh-dept {
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .lh-state {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .lh-city {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .lh-dept {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .brand-rule {
+    height: 6px;
+    margin-top: 1.25rem;
+    border-radius: 2px;
+    background: repeating-linear-gradient(135deg, var(--green) 0 14px, var(--coral) 14px 28px);
+  }
+
+  .page-head {
+    padding: 1.5rem 0 1.5rem;
     border-bottom: 2px solid var(--ink);
   }
 
@@ -47,14 +114,14 @@
     font-size: 12px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent-deep);
+    color: var(--coral-deep);
     margin: 0 0 0.4rem;
   }
 
   h1 {
-    font-family: var(--serif);
+    font-family: var(--display);
     font-size: 30px;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0 0 0.4rem;
     letter-spacing: -0.01em;
   }
@@ -103,22 +170,29 @@
 
   .section-head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 0.75rem;
     margin-bottom: 0.6rem;
   }
 
   .section-num {
-    font-family: var(--serif);
-    font-size: 26px;
-    font-weight: 600;
-    color: var(--accent);
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--green);
     line-height: 1;
-    min-width: 2ch;
+    width: 2.25rem;
+    height: 2.25rem;
+    min-width: 2.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .section-title {
-    font-family: var(--serif);
+    font-family: var(--display);
     font-size: 18px;
     font-weight: 600;
     margin: 0;
@@ -128,11 +202,11 @@
     font-size: 13px;
     color: var(--ink-soft);
     margin: 0 0 0.75rem;
-    padding-left: calc(2ch + 0.75rem);
+    padding-left: 3rem;
   }
 
   .section-body {
-    padding-left: calc(2ch + 0.75rem);
+    padding-left: 3rem;
   }
 
   @media (max-width: 480px) {
@@ -174,8 +248,8 @@
 
   input:focus, select:focus, textarea:focus {
     outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-soft);
   }
 
   .field { margin-bottom: 1rem; }
@@ -191,7 +265,7 @@
   }
 
   .provid-card.active {
-    border-color: var(--accent);
+    border-color: var(--green);
   }
 
   .provid-check {
@@ -207,7 +281,7 @@
   .provid-check input {
     width: auto;
     margin-top: 0.2rem;
-    accent-color: var(--accent);
+    accent-color: var(--green);
   }
 
   .provid-card textarea, .provid-card .audiencia-grid {
@@ -228,13 +302,13 @@
 
   /* IA panels */
   .ia-panel {
-    border: 1px solid var(--accent);
+    border: 1px solid var(--green);
     border-radius: 4px;
     padding: 1.1rem 1.25rem;
-    background: var(--accent-soft);
+    background: var(--green-soft);
   }
 
-  .ia-panel .section-hint { padding-left: 0; color: var(--accent-deep); opacity: 0.85; }
+  .ia-panel .section-hint { padding-left: 0; color: var(--green-deep); opacity: 0.85; }
 
   textarea.ia-output {
     background: var(--paper);
@@ -247,8 +321,8 @@
     font-weight: 600;
     padding: 0.55rem 1.1rem;
     border-radius: 4px;
-    border: 1px solid var(--accent);
-    background: var(--accent);
+    border: 1px solid var(--coral);
+    background: var(--coral);
     color: #fff;
     cursor: pointer;
     transition: opacity 0.15s ease, transform 0.05s ease;
@@ -263,8 +337,13 @@
 
   .btn.secondary {
     background: transparent;
-    color: var(--accent-deep);
-    border-color: var(--accent);
+    color: var(--green-deep);
+    border-color: var(--green);
+  }
+
+  .btn.secondary:hover {
+    background: var(--green-soft);
+    opacity: 1;
   }
 
   .btn-row {
@@ -306,7 +385,7 @@
   .config-notice.show { display: block; }
 
   ::placeholder {
-    color: #B6B0A2;
+    color: #A9AFA9;
   }
 
   /* Upload de documentos */
@@ -354,7 +433,7 @@
     justify-content: space-between;
     gap: 0.5rem;
     font-size: 13px;
-    background: var(--accent-soft);
+    background: var(--green-soft);
     border-radius: 4px;
     padding: 0.4rem 0.6rem;
   }
@@ -389,11 +468,24 @@
 <body>
 <div class="wrap">
 
-  <header class="page-head">
-    <p class="eyebrow">Procon · Defesa do consumidor</p>
-    <h1>Atendimento &amp; continuidade processual</h1>
-    <p class="subtitle">Formulário para análise de pedidos da inicial, resposta da fornecedora e providências determinadas no despacho saneador.</p>
+  <header class="letterhead">
+    <div class="letterhead-row">
+      <img src="assets/brasao-vg.jpg" alt="Brasão da Prefeitura Municipal de Várzea Grande" class="letterhead-logo">
+      <div class="letterhead-text">
+        <p class="lh-state">Estado de Mato Grosso</p>
+        <p class="lh-city">Prefeitura Municipal de Várzea Grande</p>
+        <p class="lh-dept">Coordenadoria de Defesa do Consumidor — PROCON/VG</p>
+      </div>
+      <img src="assets/logo-procon-vg.jpg" alt="Logo PROCON VG" class="letterhead-logo letterhead-logo--wide">
+    </div>
+    <div class="brand-rule"></div>
   </header>
+
+  <div class="page-head">
+    <p class="eyebrow">Atendimento ao consumidor</p>
+    <h1>Continuidade processual</h1>
+    <p class="subtitle">Formulário para análise de pedidos da inicial, resposta da fornecedora e providências para o prosseguimento do processo administrativo.</p>
+  </div>
 
   <div id="configNotice" class="config-notice"></div>
 
@@ -483,24 +575,6 @@
   <div class="section">
     <div class="section-head">
       <span class="section-num">4</span>
-      <h2 class="section-title">Resolução de prosseguimento</h2>
-    </div>
-    <p class="section-hint">Indicação de como o processo administrativo deve seguir: saneamento, solicitação de diligência ou agendamento de audiência.</p>
-    <div class="section-body">
-      <div class="ia-panel">
-        <textarea id="resolucaoProsseguimento" class="ia-output" rows="5" placeholder="Sugestão de encaminhamento: sanear o feito, solicitar diligência específica, ou agendar audiência de conciliação/instrução — com a justificativa correspondente."></textarea>
-        <div class="btn-row">
-          <button class="btn" id="btnResolucao" type="button">Sugerir resolução com IA</button>
-        </div>
-        <p class="status-msg" id="statusResolucao"></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 5 -->
-  <div class="section">
-    <div class="section-head">
-      <span class="section-num">5</span>
       <h2 class="section-title">Providências para continuidade do processo</h2>
     </div>
     <div class="section-body">
@@ -569,7 +643,7 @@
   <!-- 6 -->
   <div class="section">
     <div class="section-head">
-      <span class="section-num">6</span>
+      <span class="section-num">5</span>
       <h2 class="section-title">Minuta de despacho/encaminhamento</h2>
     </div>
     <p class="section-hint">Texto contínuo gerado pela IA a partir de todas as informações preenchidas acima.</p>
@@ -655,38 +729,6 @@ document.getElementById('btnAnalise').addEventListener('click', async () => {
   setLoading(btn, status, false, 'Gerar análise com IA', '');
 });
 
-// --- Resolução de prosseguimento ---
-document.getElementById('btnResolucao').addEventListener('click', async () => {
-  const btn = document.getElementById('btnResolucao');
-  const status = document.getElementById('statusResolucao');
-  setLoading(btn, status, true, 'Sugerir resolução com IA', 'Analisando...');
-
-  const prompt = "Você é assistente de um atendente do Procon (órgão brasileiro de defesa do consumidor). "
-    + "Com base nos dados abaixo, sugira como o processo administrativo deve prosseguir, em texto corrido, em português do Brasil, "
-    + "em parágrafos concatenados, sem usar marcadores, números, letras ou divisões de tópicos. "
-    + "Avalie se o processo já está pronto para ser saneado e decidido, ou se é necessário solicitar diligência específica "
-    + "(indicando qual) ou agendar audiência de conciliação/instrução (indicando a finalidade), sempre com foco na resolução "
-    + "do problema do consumidor. Justifique a sugestão de forma objetiva, com base no confronto entre os pedidos da inicial "
-    + "e a resposta da fornecedora. Não invente fatos; baseie-se apenas no que foi informado.\n\n"
-    + "PROCESSO N.: " + (val('numProc') || '[não informado]') + "\n"
-    + "CONSUMIDORA(O): " + (val('consumidora') || '[não informado]') + "\n"
-    + "FORNECEDORA: " + (val('fornecedora') || '[não informado]') + "\n\n"
-    + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
-    + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
-    + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)');
-
-  try {
-    const texto = await chamarIA(prompt);
-    document.getElementById('resolucaoProsseguimento').value = texto;
-    status.textContent = '';
-    status.classList.remove('error');
-  } catch (e) {
-    status.textContent = 'Erro: ' + e.message;
-    status.classList.add('error');
-  }
-  setLoading(btn, status, false, 'Sugerir resolução com IA', '');
-});
-
 // --- Minuta ---
 document.getElementById('btnMinuta').addEventListener('click', async () => {
   const btn = document.getElementById('btnMinuta');
@@ -723,7 +765,6 @@ document.getElementById('btnMinuta').addEventListener('click', async () => {
     + "PEDIDOS DA INICIAL:\n" + val('pedidosIniciais') + "\n\n"
     + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
     + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)') + "\n\n"
-    + "RESOLUÇÃO DE PROSSEGUIMENTO:\n" + (val('resolucaoProsseguimento') || '(não preenchida)') + "\n\n"
     + "PROVIDÊNCIAS DETERMINADAS (foco principal do texto):\n" + (providencias.length ? providencias.join(". ") : "(nenhuma providência específica marcada)");
 
   try {
