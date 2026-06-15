@@ -709,12 +709,13 @@ document.getElementById('btnMinuta').addEventListener('click', async () => {
     + "uma minuta de despacho/encaminhamento processual para continuidade do processo administrativo de defesa do consumidor.\n\n"
     + "REQUISITOS DE FORMA, OBRIGATÓRIOS: o texto deve ser corrido, em parágrafos concatenados, conectados por conectivos "
     + "e transições naturais. NÃO use divisão por tópicos, números, marcadores, títulos de seção ou qualquer estrutura "
-    + "que separe visualmente as partes do raciocínio. NÃO repita ou liste cada item separadamente; em vez disso, sintetize "
-    + "os pontos principais de cada informação (pedidos, resposta da fornecedora, resolução de prosseguimento, providências) de forma "
-    + "fluida dentro da narrativa. O texto deve ter foco na resolução do problema do consumidor, conduzindo o raciocínio "
-    + "naturalmente até as providências determinadas para a continuidade do feito. "
-    + "EXTENSÃO: produza um texto de tamanho intermediário, com aproximadamente 4 a 6 parágrafos bem desenvolvidos, "
-    + "garantindo que o texto seja concluído (com fecho adequado) e não termine de forma abrupta ou cortada.\n\n"
+    + "que separe visualmente as partes do raciocínio. NÃO repita, transcreva ou liste cada item separadamente; em vez disso, "
+    + "sintetize em poucas frases o essencial de cada informação (o cerne dos pedidos, a essência da resposta da fornecedora "
+    + "e o resultado da análise comparativa), sem se prolongar em detalhes secundários.\n\n"
+    + "FOCO PRINCIPAL: o texto deve dar maior destaque às providências determinadas para a continuidade do feito, explicando "
+    + "objetivamente o que será feito e por quê, sempre orientado à resolução do problema do consumidor.\n\n"
+    + "EXTENSÃO: produza um texto enxuto e direto, com aproximadamente 2 a 3 parágrafos, evitando prolixidade e repetições. "
+    + "Garanta que o texto seja concluído (com fecho adequado) e não termine de forma abrupta ou cortada.\n\n"
     + "DADOS DO PROCESSO:\n"
     + "Processo n.: " + (val('numProc') || '[número não informado]') + "\n"
     + "Consumidora(o): " + (val('consumidora') || '[não informado]') + "\n"
@@ -723,7 +724,7 @@ document.getElementById('btnMinuta').addEventListener('click', async () => {
     + "RESPOSTA DA FORNECEDORA:\n" + val('respostaFornecedora') + "\n\n"
     + "ANÁLISE COMPARATIVA:\n" + (val('analiseComparativa') || '(não preenchida)') + "\n\n"
     + "RESOLUÇÃO DE PROSSEGUIMENTO:\n" + (val('resolucaoProsseguimento') || '(não preenchida)') + "\n\n"
-    + "PROVIDÊNCIAS DETERMINADAS:\n" + (providencias.length ? providencias.join(". ") : "(nenhuma providência específica marcada)");
+    + "PROVIDÊNCIAS DETERMINADAS (foco principal do texto):\n" + (providencias.length ? providencias.join(". ") : "(nenhuma providência específica marcada)");
 
   try {
     const texto = await chamarIA(prompt);
